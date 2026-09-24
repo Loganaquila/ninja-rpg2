@@ -1,30 +1,21 @@
 import Phaser from 'phaser';import './style.css';
-const W=2304,H=4096,MAP='/_cdn/static/0309a9da-5088-436f-b6a2-15bf6752ccb1.png',HERO='/_cdn/static/9715f668-1a39-4158-832b-5ffde4a62001.png';
+const W=4096,H=4096;
 type Spot={name:string,x:number,y:number,r:number,action:string};type Stats={hp:number,en:number,xp:number,rxp:number,money:number,force:number,defense:number,technique:number};
 class Village extends Phaser.Scene{
  player!:Phaser.GameObjects.Container;hero?:Phaser.GameObjects.Image;label!:Phaser.GameObjects.Text;target?:Phaser.Math.Vector2;speed=245;spots:Spot[]=[];panel?:HTMLDivElement;mission=0;scrolls:string[]=[];techniques=['Pas du novice'];stats:Stats={hp:100,en:100,xp:0,rxp:0,money:150,force:12,defense:10,technique:14};
- preload(){this.load.image('village',MAP);this.load.image('hero',HERO)}
- create(){
-  this.cameras.main.setBackgroundColor('#14241b');
-  // Même illustration de village pixel-art utilisée dans la version Floot validée.
-  const map=this.add.image(W/2,H/2,'village').setDisplaySize(W,H).setOrigin(.5).setDepth(0);map.texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
-  // légère vignette pour retrouver l'ambiance chaude de Floot sans masquer l'illustration
-  const shade=this.add.graphics().setDepth(2);shade.fillStyle(0x08120d,.10).fillRect(0,0,W,H);
-  this.spots=[
-   {name:'Tour du Conseil',x:1152,y:680,r:150,action:'council'},
-   {name:'Bureau des missions',x:680,y:1900,r:150,action:'missions'},
-   {name:'Académie',x:1650,y:1420,r:150,action:'academy'},
-   {name:'Dojo',x:1710,y:2550,r:150,action:'dojo'},
-   {name:'Terrain d’entraînement',x:650,y:3260,r:190,action:'training'}
-  ];
-  // repères intégrés au monde, style panneau pixel-art discret
-  this.spots.slice(0,4).forEach(s=>{const t=this.add.text(s.x,s.y-80,s.name.toUpperCase(),{fontFamily:'monospace',fontSize:'18px',color:'#f0d083',backgroundColor:'#101914cc',padding:{x:8,y:5},stroke:'#101914',strokeThickness:2}).setOrigin(.5).setDepth(8);t.setResolution(1)});
-  const shadow=this.add.ellipse(0,20,38,13,0x000000,.4);this.hero=this.add.image(0,-8,'hero').setDisplaySize(48,48).setCrop(0,0,256,256);this.hero.texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
-  this.player=this.add.container(1152,1050,[shadow,this.hero]).setDepth(20);this.label=this.add.text(1152,995,'Aspirant III',{fontFamily:'monospace',fontSize:'13px',color:'#ffe59a',backgroundColor:'#101914bb',padding:{x:5,y:2}}).setOrigin(.5).setDepth(21);
-  this.cameras.main.setBounds(0,0,W,H).startFollow(this.player,true,.09,.09);this.cameras.main.setZoom(1.05);
-  this.input.on('pointerdown',(p:Phaser.Input.Pointer)=>{if((p.event.target as HTMLElement)?.closest?.('.ui'))return;const hit=this.spots.find(s=>Phaser.Math.Distance.Between(p.worldX,p.worldY,s.x,s.y)<s.r);this.target=new Phaser.Math.Vector2(hit?.x??p.worldX,hit?.y??p.worldY)});
-  this.makeUI();
- }
+ preload(){this.load.image('house','assets/house.svg');this.load.image('tree','assets/tree.svg');this.load.image('rock','assets/rock.svg');this.load.image('lantern','assets/lantern.svg');this.load.image('hero','assets/hero.svg')}
+ create(){this.cameras.main.setBackgroundColor('#203d2d');const g=this.add.graphics();g.fillStyle(0x315b3d).fillRect(0,0,W,H);
+ for(let y=0;y<H;y+=32)for(let x=0;x<W;x+=32){const n=(x*7+y*11)%37;if(n<12){g.fillStyle(n<6?0x376543:0x294f36);g.fillRect(x+6+n%5,y+9,3,9);g.fillRect(x+11+n%3,y+14,3,6)}}
+ const path=(pts:number[][],w=150)=>{g.lineStyle(w+28,0x3e4935);g.beginPath();g.moveTo(pts[0][0],pts[0][1]);pts.slice(1).forEach(p=>g.lineTo(p[0],p[1]));g.strokePath();g.lineStyle(w,0xa28758);g.beginPath();g.moveTo(pts[0][0],pts[0][1]);pts.slice(1).forEach(p=>g.lineTo(p[0],p[1]));g.strokePath()};path([[2000,0],[2000,720],[1850,1150],[2000,1650],[2000,2400],[1850,3100],[2000,4096]],190);path([[0,1180],[900,1180],[1500,1100],[2000,1150],[2800,1100],[4096,1200]],160);path([[0,2850],[850,2850],[1450,3000],[2000,2920],[3000,2900],[4096,2800]],150);
+ g.fillStyle(0x253f36).fillRect(0,1850,W,360);g.fillStyle(0x3f7476).fillRect(0,1890,W,280);for(let x=30;x<W;x+=110)g.fillStyle(0x6a9b94,.45).fillRect(x,1950+(x%3)*55,55,4);
+ const bridge=(x:number)=>{g.fillStyle(0x493326).fillRect(x-110,1868,220,324);for(let y=1880;y<2180;y+=24){g.fillStyle(0xa67b4b).fillRect(x-100,y,200,19);g.fillStyle(0x67482f).fillRect(x-100,y+16,200,4)}};bridge(1050);bridge(2000);bridge(3100);
+ [[120,260,900],[2750,260,1050],[250,3250,1150],[2700,3300,1100]].forEach(([x,y,w])=>{g.fillStyle(0x514c38).fillRect(x,y,w,48);g.fillStyle(0x766a48).fillRect(x,y,w,18);for(let i=0;i<w;i+=45)g.fillStyle(0x3b3d30).fillRect(x+i,y+38,24,10)});
+ const homes:number[][]=[];for(let row=0;row<4;row++)for(let col=0;col<5;col++){homes.push([260+col*290,430+row*300]);homes.push([2600+col*270,420+row*310])}homes.forEach((p,i)=>{if(p[0]>3900)return;const h=this.add.image(p[0],p[1],'house').setScale(i%3===0?1.35:1.15).setDepth(5);h.texture.setFilter(Phaser.Textures.FilterMode.NEAREST)});
+ [[2000,520,2.7],[620,2520,2.2],[3330,650,2.3],[3350,2520,2.15]].forEach(([x,y,s])=>{const h=this.add.image(x,y,'house').setScale(s).setDepth(6);h.texture.setFilter(Phaser.Textures.FilterMode.NEAREST)});
+ for(let i=0;i<310;i++){const x=60+(i*347)%3970,y=80+(i*613)%3940;if(Math.abs(x-2000)<150||(y>1810&&y<2220))continue;const t=this.add.image(x,y,'tree').setScale(.72+(i%4)*.09).setDepth(4);t.texture.setFilter(Phaser.Textures.FilterMode.NEAREST)}for(let i=0;i<80;i++){const x=100+(i*521)%3900,y=150+(i*379)%3700;this.add.image(x,y,'rock').setScale(.7+(i%3)*.12).setDepth(3)}for(let y=800;y<3500;y+=380){this.add.image(1910,y,'lantern').setDepth(9);this.add.image(2090,y,'lantern').setDepth(9)}
+ const title=(x:number,y:number,t:string)=>this.add.text(x,y,t,{fontFamily:'monospace',fontSize:'17px',color:'#f0d083',backgroundColor:'#101914dd',padding:{x:8,y:5}}).setOrigin(.5).setDepth(12);title(2000,720,'TOUR DU CONSEIL');title(620,2700,'BUREAU DES MISSIONS');title(3330,830,'ACADÉMIE');title(3350,2700,'DOJO');title(900,3430,'TERRAIN D’ENTRAÎNEMENT');
+ this.spots=[{name:'Tour du Conseil',x:2000,y:760,r:150,action:'council'},{name:'Bureau des missions',x:620,y:2740,r:150,action:'missions'},{name:'Académie',x:3330,y:870,r:150,action:'academy'},{name:'Dojo',x:3350,y:2740,r:150,action:'dojo'},{name:'Terrain d’entraînement',x:900,y:3470,r:190,action:'training'}];
+ const shadow=this.add.ellipse(0,18,30,10,0x000000,.38),hero=this.add.image(0,-8,'hero').setScale(1.25);hero.texture.setFilter(Phaser.Textures.FilterMode.NEAREST);this.player=this.add.container(2000,1000,[shadow,hero]).setDepth(20);this.label=this.add.text(2000,950,'Aspirant III',{fontFamily:'monospace',fontSize:'12px',color:'#ffe59a',backgroundColor:'#101914bb',padding:{x:4,y:2}}).setOrigin(.5).setDepth(21);this.cameras.main.setBounds(0,0,W,H).startFollow(this.player,true,.09,.09);this.cameras.main.setZoom(1.15);this.input.on('pointerdown',(p:Phaser.Input.Pointer)=>{if((p.event.target as HTMLElement)?.closest?.('.ui'))return;const hit=this.spots.find(s=>Phaser.Math.Distance.Between(p.worldX,p.worldY,s.x,s.y)<s.r);this.target=new Phaser.Math.Vector2(hit?.x??p.worldX,hit?.y??p.worldY)});this.makeUI()}
  makeUI(){document.querySelectorAll('.ui').forEach(e=>e.remove());const h=document.createElement('div');h.className='ui hud floot';h.innerHTML='<b>LOGAN</b><span class="rank">ASPIRANT III</span><span>PV <i><em style="width:100%"></em></i>100/100</span><span>ÉNERGIE <i class="energy"><em style="width:100%"></em></i>100/100</span><span id="money">◈ 150 Ryō</span><span id="xp">EXP 0 · RANG 0</span>';document.body.appendChild(h);
   const q=document.createElement('div');q.className='ui mission floot';q.id='mission';q.innerHTML='<b>OBJECTIF</b><br>Rejoins le Bureau des missions.<br><small>Touche directement la carte pour te déplacer.</small>';document.body.appendChild(q);
   const nav=document.createElement('div');nav.className='ui nav floot';nav.innerHTML='<button data-p="character">🥷<small>PERSONNAGE</small></button><button data-p="tech">✦<small>TECHNIQUES</small></button><button data-p="bag">▣<small>INVENTAIRE</small></button><button data-p="missions">📜<small>MISSIONS</small></button>';document.body.appendChild(nav);nav.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>this.openPanel((b as HTMLElement).dataset.p||'')))}
