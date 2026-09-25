@@ -37,6 +37,31 @@ func _build_world():
         var a=float(i)*TAU/24.0; var p=Vector3(cos(a)*45,2,sin(a)*30)
         box(p,Vector3(1.2,4,1.2),Color("6b4423"),"Palm")
         box(p+Vector3(0,3,0),Vector3(4,2,4),Color("237a42"),"Leaves")
+    # Place du village, routes et détails du port
+    box(Vector3(0,-.05,5),Vector3(18,.2,18),Color("c9b07c"),"VillageSquare")
+    box(Vector3(0,.05,18),Vector3(5,.15,28),Color("bda678"),"MainRoad")
+    for x in [-38.0,-27.0,-8.0,8.0,27.0,38.0]:
+        box(Vector3(x,.2,28),Vector3(1.2,.4,1.2),Color("6b4423"),"Barrel")
+    for x in [-31.0,-21.0,-11.0,11.0,21.0,31.0]:
+        box(Vector3(x,.55,36),Vector3(.35,1.1,.35),Color("56351f"),"DockPost")
+    # Marché côtier
+    for x in [-12.0,-6.0,6.0,12.0]:
+        box(Vector3(x,1,10),Vector3(4,2,3),Color("d48b4c"),"MarketStall")
+        box(Vector3(x,2.3,10),Vector3(4.6,.35,3.5),Color("e7c45b"),"Awning")
+    # Falaises et zone sauvage au nord
+    for x in range(-45,46,10):
+        box(Vector3(x,2,-35),Vector3(9,5,7),Color("6f7565"),"Cliff")
+    for z in [-28.0,-22.0]:
+        for x in [-36.0,-24.0,-12.0,12.0,24.0,36.0]:
+            box(Vector3(x,2,z),Vector3(1.1,4,1.1),Color("6b4423"),"ForestTree")
+            box(Vector3(x,4,z),Vector3(4.5,3,4.5),Color("1d6b3b"),"ForestCanopy")
+    # Navire amarré au port (silhouette 3D originale)
+    box(Vector3(-26,1.2,48),Vector3(15,2.5,5),Color("59351f"),"PirateShipHull")
+    box(Vector3(-26,5,48),Vector3(.6,8,.6),Color("4b2e1d"),"Mast")
+    box(Vector3(-23,5.5,48),Vector3(5,.25,5),Color("f0e2bd"),"Sail")
+    # Petite crique et rochers
+    for x in [-43.0,-39.0,39.0,43.0]:
+        box(Vector3(x,.6,33),Vector3(3,1.5,3),Color("77786f"),"BeachRock")
     _npc(Vector3(-18,1,20),"Capitaine pirate","Pirate")
     _npc(Vector3(20,1,18),"Officier de la Marine","Marine")
 
