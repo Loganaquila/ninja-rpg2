@@ -1,114 +1,111 @@
-extends Node3D
+extends Node2D
 
-var player: CharacterBody3D
-var camera: Camera3D
+var player: CharacterBody2D
 var faction := "Sans faction"
-var quest_label: Label
 var faction_label: Label
+var quest_label: Label
 
 func _ready():
-    _build_world()
+    _build_island()
     _build_player()
     _build_ui()
 
-func mat(color: Color) -> StandardMaterial3D:
-    var m=StandardMaterial3D.new(); m.albedo_color=color; m.roughness=.8; return m
+func rect(pos:Vector2,size:Vector2,color:Color,name:String="Decor",z:=0):
+    var p=Polygon2D.new()
+    p.name=name; p.position=pos; p.z_index=z; p.color=color
+    p.polygon=PackedVector2Array([Vector2(-size.x/2,-size.y/2),Vector2(size.x/2,-size.y/2),Vector2(size.x/2,size.y/2),Vector2(-size.x/2,size.y/2)])
+    add_child(p)
 
-func box(pos:Vector3,size:Vector3,color:Color,name:String="Prop"):
-    var body=StaticBody3D.new(); body.name=name; body.position=pos
-    var mesh=MeshInstance3D.new(); var b=BoxMesh.new(); b.size=size; mesh.mesh=b; mesh.material_override=mat(color); body.add_child(mesh)
-    var cs=CollisionShape3D.new(); var shape=BoxShape3D.new(); shape.size=size; cs.shape=shape; body.add_child(cs); add_child(body)
+func circle(pos:Vector2,r:float,color:Color,name:String="Decor",z:=0):
+    var p=Polygon2D.new(); var pts=PackedVector2Array()
+    for i in range(16): pts.append(Vector2(cos(i*TAU/16.0),sin(i*TAU/16.0))*r)
+    p.polygon=pts; p.position=pos; p.color=color; p.name=name; p.z_index=z; add_child(p)
 
-func _build_world():
-    var env=WorldEnvironment.new(); var e=Environment.new(); e.background_mode=Environment.BG_COLOR; e.background_color=Color("63cde3"); e.ambient_light_source=Environment.AMBIENT_SOURCE_COLOR; e.ambient_light_color=Color("fff0d0"); e.ambient_light_energy=1.1; env.environment=e; add_child(env)
-    var sun=DirectionalLight3D.new(); sun.rotation_degrees=Vector3(-55,-35,0); sun.shadow_enabled=true; sun.light_energy=1.3; add_child(sun)
-    box(Vector3(0,-1,0),Vector3(105,2,82),Color("54a86b"),"Island")
-    box(Vector3(0,-1.7,49),Vector3(150,1,28),Color("21a7c7"),"Sea")
-    box(Vector3(0,-.15,34),Vector3(90,.3,10),Color("e8c77c"),"Beach")
-    for z in [-15.0,0.0,15.0]:
-        for x in [-30.0,-15.0,0.0,15.0,30.0]:
-            if abs(x)<8 and abs(z)<8: continue
-            box(Vector3(x,1.5,z),Vector3(8,3,7),Color("d9a45d"),"House")
-            box(Vector3(x,3.5,z),Vector3(9,1,8),Color("b54f3b"),"Roof")
-    box(Vector3(-18,2,25),Vector3(13,4,10),Color("7d402e"),"PirateTavern")
-    box(Vector3(20,2,24),Vector3(14,4,11),Color("e9ecef"),"MarineOffice")
-    for x in range(-35,36,7): box(Vector3(x,.25,41),Vector3(5,.5,13),Color("7a5133"),"Dock")
-    for i in range(24):
-        var a=float(i)*TAU/24.0; var p=Vector3(cos(a)*45,2,sin(a)*30)
-        box(p,Vector3(1.2,4,1.2),Color("6b4423"),"Palm")
-        box(p+Vector3(0,3,0),Vector3(4,2,4),Color("237a42"),"Leaves")
-    # Place du village, routes et détails du port
-    box(Vector3(0,-.05,5),Vector3(18,.2,18),Color("c9b07c"),"VillageSquare")
-    box(Vector3(0,.05,18),Vector3(5,.15,28),Color("bda678"),"MainRoad")
-    for x in [-38.0,-27.0,-8.0,8.0,27.0,38.0]:
-        box(Vector3(x,.2,28),Vector3(1.2,.4,1.2),Color("6b4423"),"Barrel")
-    for x in [-31.0,-21.0,-11.0,11.0,21.0,31.0]:
-        box(Vector3(x,.55,36),Vector3(.35,1.1,.35),Color("56351f"),"DockPost")
-    # Marché côtier
-    for x in [-12.0,-6.0,6.0,12.0]:
-        box(Vector3(x,1,10),Vector3(4,2,3),Color("d48b4c"),"MarketStall")
-        box(Vector3(x,2.3,10),Vector3(4.6,.35,3.5),Color("e7c45b"),"Awning")
-    # Falaises et zone sauvage au nord
-    for x in range(-45,46,10):
-        box(Vector3(x,2,-35),Vector3(9,5,7),Color("6f7565"),"Cliff")
-    for z in [-28.0,-22.0]:
-        for x in [-36.0,-24.0,-12.0,12.0,24.0,36.0]:
-            box(Vector3(x,2,z),Vector3(1.1,4,1.1),Color("6b4423"),"ForestTree")
-            box(Vector3(x,4,z),Vector3(4.5,3,4.5),Color("1d6b3b"),"ForestCanopy")
-    # Navire amarré au port (silhouette 3D originale)
-    box(Vector3(-26,1.2,48),Vector3(15,2.5,5),Color("59351f"),"PirateShipHull")
-    box(Vector3(-26,5,48),Vector3(.6,8,.6),Color("4b2e1d"),"Mast")
-    box(Vector3(-23,5.5,48),Vector3(5,.25,5),Color("f0e2bd"),"Sail")
-    # Petite crique et rochers
-    for x in [-43.0,-39.0,39.0,43.0]:
-        box(Vector3(x,.6,33),Vector3(3,1.5,3),Color("77786f"),"BeachRock")
-    # Quartier portuaire vivant : entrepôts, phare et chantier naval
-    box(Vector3(34,2,25),Vector3(13,4,9),Color("9a6845"),"Warehouse")
-    box(Vector3(34,4.4,25),Vector3(14,1,10),Color("704333"),"WarehouseRoof")
-    box(Vector3(43,4,37),Vector3(4,8,4),Color("e5ded0"),"Lighthouse")
-    box(Vector3(43,8.5,37),Vector3(5,1,5),Color("b7463c"),"LighthouseTop")
-    box(Vector3(28,.3,39),Vector3(15,.6,7),Color("765036"),"ShipyardDeck")
-    # Fontaine et bancs sur la place centrale
-    box(Vector3(0,.7,5),Vector3(3,1.4,3),Color("8d9694"),"FountainBase")
-    box(Vector3(0,1.8,5),Vector3(1,2.2,1),Color("a9b2ae"),"Fountain")
-    for p in [Vector3(-6,.4,5),Vector3(6,.4,5),Vector3(0,.4,-1),Vector3(0,.4,11)]:
-        box(p,Vector3(3,.8,1),Color("6f482d"),"Bench")
-    # Camp de bandits et arène du premier boss dans la forêt
-    box(Vector3(0,.2,-27),Vector3(18,.4,12),Color("806846"),"BanditCamp")
-    for x in [-7.0,7.0]:
-        box(Vector3(x,1.5,-29),Vector3(5,3,4),Color("7b5031"),"BanditTent")
-    box(Vector3(0,.35,-38),Vector3(24,.7,12),Color("695b49"),"BossArena")
-    _enemy(Vector3(-4,1,-25),"Bandit",45)
-    _enemy(Vector3(5,1,-25),"Bandit",45)
-    _enemy(Vector3(0,1,-38),"Capitaine Brise-Fer",180)
-    _npc(Vector3(-18,1,20),"Capitaine pirate","Pirate")
-    _npc(Vector3(20,1,18),"Officier de la Marine","Marine")
+func _build_island():
+    # Océan et grande île tropicale 2D
+    rect(Vector2(0,0),Vector2(1800,1300),Color("42b9d1"),"Ocean",-20)
+    rect(Vector2(0,-40),Vector2(1350,900),Color("66b86b"),"Island",-15)
+    rect(Vector2(0,390),Vector2(1250,130),Color("edcf85"),"Beach",-14)
+    # Routes et place centrale
+    rect(Vector2(0,80),Vector2(95,650),Color("d7bd83"),"MainRoad",-10)
+    rect(Vector2(0,30),Vector2(380,230),Color("d7bd83"),"VillageSquare",-10)
+    # Village : maisons avec façades et toits
+    for y in [-240,-80,150]:
+        for x in [-470,-300,300,470]:
+            _house(Vector2(x,y))
+    # Taverne pirate et bureau Marine
+    _building(Vector2(-245,230),Vector2(190,125),Color("9a5a36"),Color("c94f3e"),"TAVERNE PIRATE")
+    _building(Vector2(250,225),Vector2(205,135),Color("e8e4d6"),Color("4f79ad"),"MARINE")
+    # Marché
+    for x in [-150,-50,50,150]:
+        rect(Vector2(x,-55),Vector2(70,45),Color("b66d3e"),"Market",2)
+        rect(Vector2(x,-80),Vector2(78,18),Color("e9bd52"),"Awning",3)
+    # Port et quais
+    for x in [-390,-210,0,210,390]:
+        rect(Vector2(x,500),Vector2(95,230),Color("7c5638"),"Dock",1)
+        for yy in [410,470,540,600]: circle(Vector2(x-40,yy),7,Color("4e321f"),"Post",2)
+    _ship(Vector2(-390,635))
+    _ship(Vector2(260,655))
+    # Forêt tropicale dense au nord
+    for y in [-410,-330,-260]:
+        for x in range(-570,571,95):
+            if abs(x)<120 and y>-350: continue
+            _tree(Vector2(x+((int(y)/10)%2)*25,y))
+    # Falaises / zone boss
+    for x in range(-560,561,80):
+        circle(Vector2(x,-500),45,Color("687264"),"Cliff",-5)
+    rect(Vector2(0,-405),Vector2(300,150),Color("806b4c"),"BossClearing",-8)
+    _enemy(Vector2(-55,-405),"Bandit",45)
+    _enemy(Vector2(65,-405),"Bandit",45)
+    _enemy(Vector2(0,-470),"Capitaine Brise-Fer",180)
+    _recruiter(Vector2(-245,300),"Pirate")
+    _recruiter(Vector2(250,300),"Marine")
 
-func _npc(pos:Vector3,title:String,side:String):
-    var a=Area3D.new(); a.position=pos; a.set_meta("side",side); a.set_meta("title",title)
-    var mesh=MeshInstance3D.new(); var c=CapsuleMesh.new(); c.height=2.2; c.radius=.55; mesh.mesh=c; mesh.material_override=mat(Color("9b3f32") if side=="Pirate" else Color("e7edf5")); a.add_child(mesh)
-    var cs=CollisionShape3D.new(); var s=SphereShape3D.new(); s.radius=2.4; cs.shape=s; a.add_child(cs); add_child(a)
-    a.body_entered.connect(func(body): if body==player: _choose_faction(side))
+func _house(pos:Vector2):
+    rect(pos,Vector2(145,95),Color("dfb36e"),"House",1)
+    rect(pos+Vector2(0,-55),Vector2(165,42),Color("b94e3d"),"Roof",3)
+    rect(pos+Vector2(0,25),Vector2(30,45),Color("70452f"),"Door",4)
+    circle(pos+Vector2(-42,0),13,Color("8ed3e5"),"Window",4)
 
-func _enemy(pos:Vector3,title:String,hp:int):
-    var enemy=StaticBody3D.new(); enemy.position=pos; enemy.name=title; enemy.set_meta("hp",hp)
-    var mesh=MeshInstance3D.new(); var capsule=CapsuleMesh.new(); capsule.height=2.2; capsule.radius=.65; mesh.mesh=capsule; mesh.material_override=mat(Color("6e2635") if hp<100 else Color("3d1720")); enemy.add_child(mesh)
-    var cs=CollisionShape3D.new(); var shape=CapsuleShape3D.new(); shape.height=2.2; shape.radius=.65; cs.shape=shape; enemy.add_child(cs); add_child(enemy)
+func _building(pos:Vector2,size:Vector2,body:Color,roof:Color,title:String):
+    rect(pos,size,body,title,1); rect(pos+Vector2(0,-size.y/2-18),Vector2(size.x+18,38),roof,"Roof",3)
+    rect(pos+Vector2(0,25),Vector2(38,55),Color("65412c"),"Door",4)
+
+func _tree(pos:Vector2):
+    rect(pos+Vector2(0,18),Vector2(16,45),Color("73502e"),"Trunk",0)
+    circle(pos,34,Color("287b45"),"Palm",2); circle(pos+Vector2(22,-8),25,Color("349454"),"Leaves",3)
+
+func _ship(pos:Vector2):
+    rect(pos,Vector2(145,48),Color("5b3825"),"ShipHull",2)
+    rect(pos+Vector2(0,-45),Vector2(8,95),Color("49301f"),"Mast",3)
+    rect(pos+Vector2(32,-55),Vector2(58,62),Color("f2e5c2"),"Sail",3)
+
+func _enemy(pos:Vector2,title:String,hp:int):
+    var e=StaticBody2D.new(); e.position=pos; e.name=title; e.set_meta("hp",hp); e.z_index=8
+    var shape=CollisionShape2D.new(); var capsule=CapsuleShape2D.new(); capsule.radius=15; capsule.height=38; shape.shape=capsule; e.add_child(shape)
+    var body=Polygon2D.new(); body.color=Color("67263a") if hp<100 else Color("301823"); body.polygon=PackedVector2Array([Vector2(-14,-20),Vector2(14,-20),Vector2(18,20),Vector2(-18,20)]); e.add_child(body); add_child(e)
+
+func _recruiter(pos:Vector2,side:String):
+    var a=Area2D.new(); a.position=pos; a.set_meta("side",side); a.z_index=8
+    var cs=CollisionShape2D.new(); var s=CircleShape2D.new(); s.radius=55; cs.shape=s; a.add_child(cs)
+    var body=Polygon2D.new(); body.color=Color("8b352d") if side=="Pirate" else Color("e9eef5"); body.polygon=PackedVector2Array([Vector2(-15,-22),Vector2(15,-22),Vector2(18,22),Vector2(-18,22)]); a.add_child(body); add_child(a)
+    a.body_entered.connect(func(b): if b==player: _choose_faction(side))
 
 func _build_player():
-    player=CharacterBody3D.new(); player.name="Logan"; player.position=Vector3(0,1,27); player.set_script(load("res://scripts/player.gd"))
-    var mesh=MeshInstance3D.new(); var c=CapsuleMesh.new(); c.height=2.0; c.radius=.55; mesh.mesh=c; mesh.material_override=mat(Color("274c77")); player.add_child(mesh)
-    var cs=CollisionShape3D.new(); var s=CapsuleShape3D.new(); s.height=2.0; s.radius=.55; cs.shape=s; player.add_child(cs); add_child(player)
-    camera=Camera3D.new(); camera.position=Vector3(0,22,14); camera.rotation_degrees=Vector3(-60,0,0); camera.current=true; player.add_child(camera)
+    player=CharacterBody2D.new(); player.name="Logan"; player.position=Vector2(0,330); player.set_script(load("res://scripts/player.gd")); player.z_index=10
+    var cs=CollisionShape2D.new(); var s=CapsuleShape2D.new(); s.radius=15; s.height=42; cs.shape=s; player.add_child(cs)
+    var body=Polygon2D.new(); body.color=Color("244d78"); body.polygon=PackedVector2Array([Vector2(-15,-22),Vector2(15,-22),Vector2(18,22),Vector2(-18,22)]); player.add_child(body)
+    var cam=Camera2D.new(); cam.position_smoothing_enabled=true; cam.position_smoothing_speed=6; cam.zoom=Vector2(.9,.9); player.add_child(cam); add_child(player)
 
 func _build_ui():
     var layer=CanvasLayer.new(); add_child(layer)
-    var panel=ColorRect.new(); panel.color=Color(0.03,.08,.12,.82); panel.position=Vector2(18,18); panel.size=Vector2(310,110); layer.add_child(panel)
-    var name=Label.new(); name.text="LOGAN   •   NIVEAU 1\nPV 100 / 100   EXP 0 / 1000"; name.position=Vector2(18,12); name.add_theme_font_size_override("font_size",18); panel.add_child(name)
-    faction_label=Label.new(); faction_label.text="Faction : Sans faction"; faction_label.position=Vector2(18,70); panel.add_child(faction_label)
+    var panel=ColorRect.new(); panel.color=Color(0.02,.06,.1,.86); panel.position=Vector2(16,16); panel.size=Vector2(315,112); layer.add_child(panel)
+    var info=Label.new(); info.text="LOGAN  •  NIVEAU 1\nPV 100 / 100    EXP 0 / 1000"; info.position=Vector2(16,12); info.add_theme_font_size_override("font_size",18); panel.add_child(info)
+    faction_label=Label.new(); faction_label.text="Faction : Sans faction"; faction_label.position=Vector2(16,74); panel.add_child(faction_label)
     quest_label=Label.new(); quest_label.text="QUÊTE PRINCIPALE\nChoisis ta voie : Pirate ou Marine"; quest_label.position=Vector2(850,24); quest_label.add_theme_font_size_override("font_size",18); layer.add_child(quest_label)
-    var hint=Label.new(); hint.text="Déplacement : ZQSD / WASD / flèches • Approche un recruteur"; hint.position=Vector2(360,670); layer.add_child(hint)
+    var hint=Label.new(); hint.text="ZQSD / WASD / flèches • Approche un recruteur"; hint.position=Vector2(430,675); layer.add_child(hint)
 
 func _choose_faction(side:String):
     if faction!="Sans faction": return
-    faction=side; faction_label.text="Faction : "+side; quest_label.text="QUÊTE TERMINÉE : Choisis ta voie\nBienvenue chez les "+side+"s !"
+    faction=side; faction_label.text="Faction : "+side
+    quest_label.text="QUÊTE TERMINÉE : Choisis ta voie\nBienvenue chez les "+side+"s !"
