@@ -62,6 +62,25 @@ func _build_world():
     # Petite crique et rochers
     for x in [-43.0,-39.0,39.0,43.0]:
         box(Vector3(x,.6,33),Vector3(3,1.5,3),Color("77786f"),"BeachRock")
+    # Quartier portuaire vivant : entrepôts, phare et chantier naval
+    box(Vector3(34,2,25),Vector3(13,4,9),Color("9a6845"),"Warehouse")
+    box(Vector3(34,4.4,25),Vector3(14,1,10),Color("704333"),"WarehouseRoof")
+    box(Vector3(43,4,37),Vector3(4,8,4),Color("e5ded0"),"Lighthouse")
+    box(Vector3(43,8.5,37),Vector3(5,1,5),Color("b7463c"),"LighthouseTop")
+    box(Vector3(28,.3,39),Vector3(15,.6,7),Color("765036"),"ShipyardDeck")
+    # Fontaine et bancs sur la place centrale
+    box(Vector3(0,.7,5),Vector3(3,1.4,3),Color("8d9694"),"FountainBase")
+    box(Vector3(0,1.8,5),Vector3(1,2.2,1),Color("a9b2ae"),"Fountain")
+    for p in [Vector3(-6,.4,5),Vector3(6,.4,5),Vector3(0,.4,-1),Vector3(0,.4,11)]:
+        box(p,Vector3(3,.8,1),Color("6f482d"),"Bench")
+    # Camp de bandits et arène du premier boss dans la forêt
+    box(Vector3(0,.2,-27),Vector3(18,.4,12),Color("806846"),"BanditCamp")
+    for x in [-7.0,7.0]:
+        box(Vector3(x,1.5,-29),Vector3(5,3,4),Color("7b5031"),"BanditTent")
+    box(Vector3(0,.35,-38),Vector3(24,.7,12),Color("695b49"),"BossArena")
+    _enemy(Vector3(-4,1,-25),"Bandit",45)
+    _enemy(Vector3(5,1,-25),"Bandit",45)
+    _enemy(Vector3(0,1,-38),"Capitaine Brise-Fer",180)
     _npc(Vector3(-18,1,20),"Capitaine pirate","Pirate")
     _npc(Vector3(20,1,18),"Officier de la Marine","Marine")
 
@@ -70,6 +89,11 @@ func _npc(pos:Vector3,title:String,side:String):
     var mesh=MeshInstance3D.new(); var c=CapsuleMesh.new(); c.height=2.2; c.radius=.55; mesh.mesh=c; mesh.material_override=mat(Color("9b3f32") if side=="Pirate" else Color("e7edf5")); a.add_child(mesh)
     var cs=CollisionShape3D.new(); var s=SphereShape3D.new(); s.radius=2.4; cs.shape=s; a.add_child(cs); add_child(a)
     a.body_entered.connect(func(body): if body==player: _choose_faction(side))
+
+func _enemy(pos:Vector3,title:String,hp:int):
+    var enemy=StaticBody3D.new(); enemy.position=pos; enemy.name=title; enemy.set_meta("hp",hp)
+    var mesh=MeshInstance3D.new(); var capsule=CapsuleMesh.new(); capsule.height=2.2; capsule.radius=.65; mesh.mesh=capsule; mesh.material_override=mat(Color("6e2635") if hp<100 else Color("3d1720")); enemy.add_child(mesh)
+    var cs=CollisionShape3D.new(); var shape=CapsuleShape3D.new(); shape.height=2.2; shape.radius=.65; cs.shape=shape; enemy.add_child(cs); add_child(enemy)
 
 func _build_player():
     player=CharacterBody3D.new(); player.name="Logan"; player.position=Vector3(0,1,27); player.set_script(load("res://scripts/player.gd"))
