@@ -1,1 +1,1 @@
-{"name":"ninja-rpg2","private":true,"version":"0.1.0","type":"module","scripts":{"dev":"vite","build":"tsc && vite build","preview":"vite preview"},"dependencies":{"phaser":"^3.90.0"},"devDependencies":{"typescript":"^5.7.2","vite":"^6.0.5"}}
+{"name":"ninja-rpg2","private":true,"version":"0.2.0","type":"module","scripts":{"dev":"vite","build":"tsc && vite build","preview":"vite preview"},"dependencies":{"@vitejs/plugin-react":"latest","vite":"^6.0.5","typescript":"^5.7.2","react":"latest","react-dom":"latest"},"devDependencies":{}}
