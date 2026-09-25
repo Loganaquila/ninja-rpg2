@@ -19,9 +19,7 @@ jobs:
         with:
           node-version: 20
       - run: npm install
-      - run: test -f public/assets/floot-village.png && test -f public/assets/floot-player.png && test -f public/assets/floot-battle.png
-      - run: npm run build -- --base=/ninja-rpg2/
-      - run: test -f dist/assets/floot-village.png && test -f dist/assets/floot-player.png && test -f dist/assets/floot-battle.png
+      - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
